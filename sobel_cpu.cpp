@@ -27,6 +27,20 @@ static char input_fname[] = "../data/zebra-gray-int8-4x";
 static int data_dims[2] = {7112, 5146}; // width=ncols, height=nrows
 char output_fname[] = "../data/processed-raw-int8-4x-cpu.dat";
 
+float convolution(float *s, int tl_idx, int nrows, float *g)
+{
+   float sum = 0.0f;
+
+   for(int row = 0; row < 3; ++row)
+   {
+      for(int col = 0; col < 3; ++col)
+      {
+         //[y + ky - 1][x + kx - 1]
+         // [1 + 0 - 1][1 + 0  1] = [0, 0]
+         sum += g[row*3 + col] * s[tl_idx + col + row*nrows]
+      }
+   }
+}
 
 //
 // sobel_filtered_pixel(): perform the sobel filtering at a given i,j location
@@ -44,12 +58,17 @@ char output_fname[] = "../data/processed-raw-int8-4x-cpu.dat";
 float
 sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, float *gy)
 {
-   float t=0.0;
+   // float t=0.0;
 
    // ADD CODE HERE: add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
 
-   return t;
+   int tl_idx = (i * nrows + j) - 1 - nrows;
+
+   float gx_conv = convolution(s, tl_idx, nrows, gx);
+   float gy_conv = convolution(s, tl_idx, nrows, gy);
+
+   return sqrt(gx_conv * gx_conv + gy_conv * gy_conv);
 }
 
 
@@ -73,6 +92,14 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
 
    // ADD CODE HERE: insert your code here that iterates over every (i,j) of input,  makes a call
    // to sobel_filtered_pixel, and assigns the resulting value at location (i,j) in the output.
+   for(int row = 1; row < nrows - 1; ++row)
+   {
+      for(int col = 1; col < ncols - 1; ++ncols)
+      {
+         int idx = row * nrows  + ncols;
+         out[idx] = sobel_filtered_pixel(in, row, col, ncols, nrows, Gx, Gy);
+      }
+   }
 
 }
 
@@ -114,6 +141,10 @@ main (int ac, char *av[])
 
    // now, create a buffer for output
    float *out_data_floats = (float *)malloc(sizeof(float)*nvalues);
+
+   // sam code: set all values to 0.0f
+   for(off_t i=0; i < nvalues; i++)
+      out_data_floats[i] = 0.0f;
 
    // do the processing =======================
    std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
