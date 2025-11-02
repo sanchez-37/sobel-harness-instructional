@@ -80,8 +80,8 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
       {
          int g_idx = (row + 1) * 3 + (col + 1); // pos in the gradient arrays
          int s_idx = idx + row * nrows + ncols; // pos in the image array
-         sum_x += g[g_idx] * s[s_idx];
-         sum_y += g[g_idx] * s[s_idx];
+         sum_x += g_x[g_idx] * s[s_idx];
+         sum_y += g_y[g_idx] * s[s_idx];
       }
    }
 
@@ -134,11 +134,11 @@ sobel_kernel_gpu(float *s,  // source image pixels
 
          if(row == 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
          {
-            out[curr_idx] = 0;
+            d[curr_idx] = 0;
          }
          else
          {
-            out[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, Gx, Gy);
+            d[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, gx, gy);
          }
       }
    }
@@ -147,8 +147,8 @@ sobel_kernel_gpu(float *s,  // source image pixels
 int
 main (int ac, char *av[])
 {
-   if(argc > 3)
-      printf("Usage: %s <numBlocks> <numThreadsPerBlock>", argv[0]);
+   if(ac > 3)
+      printf("Usage: %s <numBlocks> <numThreadsPerBlock>", av[0]);
    // input, output file names hard coded at top of file
 
    // load the input file
@@ -207,11 +207,11 @@ main (int ac, char *av[])
 
    // ADD CODE HERE: insert your code here to set a different number of thread blocks or # of threads per block
 
-   if(argc >= 2)
-      nBlocks = (int) argv[1];
+   if(ac >= 2)
+      nBlocks = (int) av[1];
 
-   if(argc >= 3)
-      nThreadsPerBlock = (int) argv[2];
+   if(ac >= 3)
+      nThreadsPerBlock = (int) av[2];
 
 
    printf(" GPU configuration: %d blocks, %d threads per block \n", nBlocks, nThreadsPerBlock);
