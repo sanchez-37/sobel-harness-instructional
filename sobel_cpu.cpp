@@ -62,22 +62,25 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
 
    // ADD CODE HERE: add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
+   
+   float sum_x = 0.0f;
+   float sum_y = 0.0f;
 
    // int tl_idx = (i * nrows + j) - 1 - nrows;
-   int idx = i * nrows + j; // index of current pixel
+   int idx = i * ncols + j; // index of current pixel
 
    for(int row = -1; row < 2; ++row)
    {
       for(int col = -1; col < 2; ++col)
       {
          int g_idx = (row + 1) * 3 + (col + 1);
-         int s_idx = idx + row * nrows + ncols;
-         sum_x += g[g_idx] * s[s_idx];
-         sum_y += g[g_idx] * s[s_idx];
+         int s_idx = idx + row * ncols + col;
+         sum_x += gx[g_idx] * s[s_idx];
+         sum_y += gy[g_idx] * s[s_idx];
       }
    }
 
-   return sqrt(gx_conv * gx_conv + gy_conv * gy_conv);
+   return sqrt(sum_x * sum_x + sum_y * sum_y);
 }
 
 
@@ -102,11 +105,11 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
    // ADD CODE HERE: insert your code here that iterates over every (i,j) of input,  makes a call
    // to sobel_filtered_pixel, and assigns the resulting value at location (i,j) in the output.
    #pragma omp parallel for collapse(2)
-   for(int row = 0; row < nrows - 1; ++row)
+   for(int row = 0; row < nrows; ++row)
    {
-      for(int col = 0; col < ncols - 1; ++col)
+      for(int col = 0; col < ncols; ++col)
       {
-         int curr_idx = row * nrows + col;
+         int curr_idx = row * ncols + col;
 
          if(row == 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
          {
@@ -114,7 +117,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
          }
          else
          {
-            out[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, Gx, Gy);
+            out[curr_idx] = sobel_filtered_pixel(in, row, col, ncols, nrows, Gx, Gy);
          }
       }
    }
@@ -158,10 +161,6 @@ main (int ac, char *av[])
 
    // now, create a buffer for output
    float *out_data_floats = (float *)malloc(sizeof(float)*nvalues);
-
-   // sam code: set all values to 0.0f
-   for(off_t i=0; i < nvalues; i++)
-      out_data_floats[i] = 0.0f;
 
    // do the processing =======================
    std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();

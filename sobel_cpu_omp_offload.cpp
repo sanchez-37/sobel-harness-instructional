@@ -52,6 +52,9 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
    // ADD CODE HERE: add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
 
+   float sum_x = 0.0f;
+   float sum_y = 0.0f;
+
    int idx = i * nrows + j; // index of current pixel
 
    for(int row = -1; row < 2; ++row)
@@ -60,12 +63,12 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
       {
          int g_idx = (row + 1) * 3 + (col + 1); // index of g's to operate with
          int s_idx = idx + row * nrows + ncols; // index of source pixel being operated on
-         sum_x += g[g_idx] * s[s_idx];
-         sum_y += g[g_idx] * s[s_idx];
+         sum_x += gx[g_idx] * s[s_idx];
+         sum_y += gy[g_idx] * s[s_idx];
       }
    }
 
-   return sqrt(gx_conv * gx_conv + gy_conv * gy_conv);
+   return sqrt(sum_x * sum_x + sum_y * sum_y);
 
    // return t;
 }
@@ -123,7 +126,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
             }
             else
             {
-               out[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, Gx, Gy);
+               out[curr_idx] = sobel_filtered_pixel(in, row, col, ncols, nrows, Gx, Gy);
             }
          }
       }
