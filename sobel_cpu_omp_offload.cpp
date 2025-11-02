@@ -47,12 +47,27 @@ float
 sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, float *gy)
 {
 
-   float t=0.0;
+   // float t=0.0;
 
    // ADD CODE HERE: add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
 
-   return t;
+   int idx = i * nrows + j; // index of current pixel
+
+   for(int row = -1; row < 2; ++row)
+   {
+      for(int col = -1; col < 2; ++col)
+      {
+         int g_idx = (row + 1) * 3 + (col + 1); // index of g's to operate with
+         int s_idx = idx + row * nrows + ncols; // index of source pixel being operated on
+         sum_x += g[g_idx] * s[s_idx];
+         sum_y += g[g_idx] * s[s_idx];
+      }
+   }
+
+   return sqrt(gx_conv * gx_conv + gy_conv * gy_conv);
+
+   // return t;
 }
 
 //
@@ -85,7 +100,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
 
 // ADD CODE HERE: you will need to add one more item to this line to map the "out" data array such that 
 // it is returned from the the device after the computation is complete. everything else here is input.
-#pragma omp target data map(to:in[0:nvals]) map(to:width) map(to:height) map(to:Gx[0:9]) map(to:Gy[0:9]) 
+#pragma omp target data map(to:in[0:nvals]) map(to:width) map(to:height) map(to:Gx[0:9]) map(to:Gy[0:9]) map(tofrom:out[0:nvals])
    {
 
    // ADD CODE HERE: insert your code here that iterates over every (i,j) of input,  makes a call
@@ -95,6 +110,23 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
    // You may also wish to consider additional clauses that might be appropriate here to increase parallelism 
    // if you are using nested loops.
 
+      #pragma omp target teams distribute parallel for collapse(2)
+      for(int row = 0; row < height; ++row)
+      {
+         for(int col = 0; col < width; ++col)
+         {
+            int curr_idx = row * nrows + col;
+
+            if(row = 0 || col == 0 || row == height - 1 || col == width - 1)
+            {
+               out[curr_idx] = 0;
+            }
+            else
+            {
+               out[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, Gx, Gy);
+            }
+         }
+      }
    } // pragma omp target data
 }
 

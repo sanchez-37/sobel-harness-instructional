@@ -132,7 +132,7 @@ sobel_kernel_gpu(float *s,  // source image pixels
       {
          int curr_idx = row * nrows + col;
 
-         if(row = 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
+         if(row == 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
          {
             out[curr_idx] = 0;
          }
