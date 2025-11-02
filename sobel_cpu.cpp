@@ -27,20 +27,20 @@ static char input_fname[] = "../data/zebra-gray-int8-4x";
 static int data_dims[2] = {7112, 5146}; // width=ncols, height=nrows
 char output_fname[] = "../data/processed-raw-int8-4x-cpu.dat";
 
-float convolution(float *s, int tl_idx, int nrows, float *g)
-{
-   float sum = 0.0f;
+// float convolution(float *s, int tl_idx, int nrows, float *g)
+// {
+//    float sum = 0.0f;
 
-   for(int row = 0; row < 3; ++row)
-   {
-      for(int col = 0; col < 3; ++col)
-      {
-         //[y + ky - 1][x + kx - 1]
-         // [1 + 0 - 1][1 + 0  1] = [0, 0]
-         sum += g[row*3 + col] * s[tl_idx + col + row*nrows]
-      }
-   }
-}
+//    for(int row = 0; row < 3; ++row)
+//    {
+//       for(int col = 0; col < 3; ++col)
+//       {
+//          //[y + ky - 1][x + kx - 1]
+//          // [1 + 0 - 1][1 + 0  1] = [0, 0]
+//          sum += g[row*3 + col] * s[tl_idx + col + row*nrows]
+//       }
+//    }
+// }
 
 //
 // sobel_filtered_pixel(): perform the sobel filtering at a given i,j location
@@ -63,10 +63,19 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
    // ADD CODE HERE: add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
 
-   int tl_idx = (i * nrows + j) - 1 - nrows;
+   // int tl_idx = (i * nrows + j) - 1 - nrows;
+   int idx = i * nrows + j; // index of current pixel
 
-   float gx_conv = convolution(s, tl_idx, nrows, gx);
-   float gy_conv = convolution(s, tl_idx, nrows, gy);
+   for(int row = -1; row < 2; ++row)
+   {
+      for(int col = -1; col < 2; ++col)
+      {
+         int g_idx = (row + 1) * 3 + (col + 1);
+         int s_idx = idx + row * nrows + ncols;
+         sum_x += g[g_idx] * s[s_idx];
+         sum_y += g[g_idx] * s[s_idx];
+      }
+   }
 
    return sqrt(gx_conv * gx_conv + gy_conv * gy_conv);
 }
@@ -96,7 +105,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
    {
       for(int col = 1; col < ncols - 1; ++ncols)
       {
-         int idx = row * nrows  + ncols;
+         int idx = row * nrows + col;
          out[idx] = sobel_filtered_pixel(in, row, col, ncols, nrows, Gx, Gy);
       }
    }

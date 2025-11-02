@@ -59,12 +59,35 @@ __device__ float
 sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, float *gy)
 {
 
-   float t=0.0;
+   // float t=0.0;
 
    // ADD CODE HERE:  add your code here for computing the sobel stencil computation at location (i,j)
    // of input s, returning a float
 
-   return t;
+   // int tl_idx = (i * nrows + j) - 1 - nrows;
+
+   // float gx_conv = convolution(s, tl_idx, nrows, gx);
+   // float gy_conv = convolution(s, tl_idx, nrows, gy);
+
+   float sum_x = 0.0f;
+   float sum_y = 0.0f;
+
+   int idx = i * nrows + j; // index of current pixel
+
+   for(int row = -1; row < 2; ++row)
+   {
+      for(int col = -1; col < 2; ++col)
+      {
+         int g_idx = (row + 1) * 3 + (col + 1); // pos in the gradient arrays
+         int s_idx = idx + row * nrows + ncols; // pos in the image array
+         sum_x += g[g_idx] * s[s_idx];
+         sum_y += g[g_idx] * s[s_idx];
+      }
+   }
+
+   return sqrt(sum_x * sum_x + sum_y * sum_y);
+
+   // return t;
 }
 
 //
@@ -95,11 +118,37 @@ sobel_kernel_gpu(float *s,  // source image pixels
 
    // because this is CUDA, you need to use CUDA built-in variables to compute an index and stride
    // your processing motif will be very similar here to that we used for vector add in Lab #2
+
+   // threadIdx.x -> idx of the current thread within its block.
+   // blockDim.x -> the number of threads in the block
+   int idx_x = blockIdx.x * blockDim.x + threadIdx.x;
+   int stride_x = blockDim.x * gridDim.x;
+   int idx_y = blockIdx.y * blockDim.y + threadIdx.y;
+   int stride_y = blockDim.y * gridDim.y;
+
+   for(int row = idx_y; row < nrows; row += stride_y)
+   {
+      for(int col = idx_x; col < ncols ; col += stride_x)
+      {
+         int curr_idx = row * nrows + col;
+
+         if(row = 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
+         {
+            out[curr_idx] = 0;
+         }
+         else
+         {
+            out[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, Gx, Gy);
+         }
+      }
+   }
 }
 
 int
 main (int ac, char *av[])
 {
+   if(argc > 3)
+      printf("Usage: %s <numBlocks> <numThreadsPerBlock>", argv[0]);
    // input, output file names hard coded at top of file
 
    // load the input file
@@ -158,6 +207,11 @@ main (int ac, char *av[])
 
    // ADD CODE HERE: insert your code here to set a different number of thread blocks or # of threads per block
 
+   if(argc >= 2)
+      nBlocks = (int) argv[1];
+
+   if(argc >= 3)
+      nThreadsPerBlock = (int) argv[2];
 
 
    printf(" GPU configuration: %d blocks, %d threads per block \n", nBlocks, nThreadsPerBlock);
