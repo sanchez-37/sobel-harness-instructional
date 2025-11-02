@@ -117,7 +117,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
          {
             int curr_idx = row * nrows + col;
 
-            if(row = 0 || col == 0 || row == height - 1 || col == width - 1)
+            if(row == 0 || col == 0 || row == height - 1 || col == width - 1)
             {
                out[curr_idx] = 0;
             }
