@@ -55,14 +55,14 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
    float sum_x = 0.0f;
    float sum_y = 0.0f;
 
-   int idx = i * nrows + j; // index of current pixel
+   int idx = i * ncols + j; // index of current pixel
 
    for(int row = -1; row < 2; ++row)
    {
       for(int col = -1; col < 2; ++col)
       {
          int g_idx = (row + 1) * 3 + (col + 1); // index of g's to operate with
-         int s_idx = idx + row * nrows + ncols; // index of source pixel being operated on
+         int s_idx = idx + row * ncols + col; // index of source pixel being operated on
          sum_x += gx[g_idx] * s[s_idx];
          sum_y += gy[g_idx] * s[s_idx];
       }
@@ -113,12 +113,12 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
    // You may also wish to consider additional clauses that might be appropriate here to increase parallelism 
    // if you are using nested loops.
 
-      #pragma omp target teams distribute parallel for collapse(2)
+      #pragma omp target teams distribute parallel for collapse(2) schedule(dynamic)
       for(int row = 0; row < height; ++row)
       {
          for(int col = 0; col < width; ++col)
          {
-            int curr_idx = row * nrows + col;
+            int curr_idx = row * ncols + col;
 
             if(row == 0 || col == 0 || row == height - 1 || col == width - 1)
             {

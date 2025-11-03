@@ -39,8 +39,8 @@ for N in 32 64 128 256 512 1024  # loop over nthreads per block
          do
             echo "Working on config N=$N, B=$B"
 
-            echo "ncu --set basic  --metrics smsp__cycles_active.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed,gpu__time_duration.avg --replay-mode kernel  --launch-count 1  $EXE -N $N -B $B"
-            ncu --set basic  --metrics smsp__cycles_active.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed,gpu__time_duration.avg --replay-mode kernel  --launch-count 1  $EXE -N $N -B $B
+            echo "ncu --set basic  --metrics smsp__cycles_active.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed,gpu__time_duration.avg --replay-mode kernel  --launch-count 1  $EXE -B $B -N $N"
+            ncu --set basic  --metrics smsp__cycles_active.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed,gpu__time_duration.avg --replay-mode kernel  --launch-count 1  $EXE $B $N
 
 
       done # loop over nblocks

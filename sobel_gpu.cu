@@ -72,14 +72,14 @@ sobel_filtered_pixel(float *s, int i, int j , int ncols, int nrows, float *gx, f
    float sum_x = 0.0f;
    float sum_y = 0.0f;
 
-   int idx = i * nrows + j; // index of current pixel
+   int idx = i * ncols + j; // index of current pixel
 
    for(int row = -1; row < 2; ++row)
    {
       for(int col = -1; col < 2; ++col)
       {
          int g_idx = (row + 1) * 3 + (col + 1); // pos in the gradient arrays
-         int s_idx = idx + row * nrows + ncols; // pos in the image array
+         int s_idx = idx + row * ncols + col; // pos in the image array
          sum_x += gx[g_idx] * s[s_idx];
          sum_y += gy[g_idx] * s[s_idx];
       }
