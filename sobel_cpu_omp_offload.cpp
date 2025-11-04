@@ -113,7 +113,7 @@ do_sobel_filtering(float *in, float *out, int ncols, int nrows)
    // You may also wish to consider additional clauses that might be appropriate here to increase parallelism 
    // if you are using nested loops.
 
-      #pragma omp target teams distribute parallel for collapse(2) schedule(dynamic)
+      #pragma omp target teams distribute parallel for collapse(2) 
       for(int row = 0; row < height; ++row)
       {
          for(int col = 0; col < width; ++col)

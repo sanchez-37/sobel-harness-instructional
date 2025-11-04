@@ -121,26 +121,29 @@ sobel_kernel_gpu(float *s,  // source image pixels
 
    // threadIdx.x -> idx of the current thread within its block.
    // blockDim.x -> the number of threads in the block
-   int idx_x = blockIdx.x * blockDim.x + threadIdx.x;
-   int stride_x = blockDim.x * gridDim.x;
-   int idx_y = blockIdx.y * blockDim.y + threadIdx.y;
-   int stride_y = blockDim.y * gridDim.y;
+   int idx = blockIdx.x * blockDim.x + threadIdx.x;
+   int stride = blockDim.x * gridDim.x;
+   //int idx_y = blockIdx.y * blockDim.y + threadIdx.y;
+   //int stride_y = blockDim.y * gridDim.y;
 
-   for(int row = idx_y; row < nrows; row += stride_y)
+   //for(int row = idx_y; row < nrows; row += stride_y)
+   for(int i = idx; i < nrows * ncols; i += stride)
    {
-      for(int col = idx_x; col < ncols ; col += stride_x)
-      {
-         int curr_idx = row * nrows + col;
+       int x = i % ncols; // col pos in image
+       int y = i / ncols; // row pos in image
+      //for(int col = idx_x; col < ncols ; col += stride_x)
+     // {
+         //int curr_idx = row * ncols + col;
 
-         if(row == 0 || col == 0 || row == nrows - 1 || col == ncols - 1)
+         if(x == 0 || y == 0 || y == nrows - 1 || x == ncols - 1)
          {
-            d[curr_idx] = 0;
+            d[i] = 0;
          }
          else
          {
-            d[curr_idx] = sobel_filtered_pixel(s, row, col, ncols, nrows, gx, gy);
+            d[i] = sobel_filtered_pixel(s, y , x, ncols, nrows, gx, gy);
          }
-      }
+     // }
    }
 }
 
